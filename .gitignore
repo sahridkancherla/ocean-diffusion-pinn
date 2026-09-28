@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Editors and OS files
+.vscode/
+.idea/
+.spyproject/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Extracted from data/temp.cdf.zip on first run
+data/temp.cdf
+data/*.part

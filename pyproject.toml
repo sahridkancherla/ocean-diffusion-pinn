@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ocean-pinn"
+version = "0.1.0"
+description = "Physics-informed neural network for vertical heat diffusion in the upper ocean at the NOAA KEO mooring"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Sahrid Kancherla" }]
+requires-python = ">=3.10"
+dependencies = [
+    "gsw>=3.6",
+    "matplotlib>=3.7",
+    "netCDF4>=1.6",
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "torch>=2.0",
+    "xarray>=2023.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "ruff>=0.5"]
+
+[project.urls]
+Repository = "https://github.com/sahridkancherla/Ocean-Diffusion-PINN"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP"]
