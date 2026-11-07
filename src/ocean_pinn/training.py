@@ -28,6 +28,7 @@ def save_checkpoint(
     torch.save(
         {
             "model": model.state_dict(),
+            "physics": model.physics,
             "optimizer": optimizer.state_dict(),
             "epoch": epoch,
             "batch": batch,

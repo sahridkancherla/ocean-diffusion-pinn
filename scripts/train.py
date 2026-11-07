@@ -1,4 +1,4 @@
-"""Train the heat diffusion PINN on the KEO mooring record."""
+"""Train a PINN on the training period of the KEO mooring record."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ import torch
 
 from ocean_pinn.config import DataConfig, LossWeights, TrainConfig
 from ocean_pinn.data import load_observations, train_test_split
-from ocean_pinn.model import HeatDiffusionPINN
+from ocean_pinn.model import AdvectionDiffusionPINN, HeatDiffusionPINN
 from ocean_pinn.training import train
 from ocean_pinn.utils import resolve_device
 
@@ -27,8 +27,17 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", default="auto", help="auto, cpu, cuda, ...")
     parser.add_argument("--w-data", type=float, default=weights.data, help="data loss weight")
     parser.add_argument("--w-physics", type=float, default=weights.physics, help="PDE loss weight")
-    parser.add_argument("--w-bc0", type=float, default=weights.bc_z0, help="T = 0 at z = 0")
-    parser.add_argument("--w-bc1", type=float, default=weights.bc_z1, help="dT/dz = 0 at z = 1")
+    parser.add_argument("--w-bc0", type=float, default=weights.bc_z0, help="deepest sensor")
+    parser.add_argument("--w-bc1", type=float, default=weights.bc_z1, help="shallowest sensor")
+    parser.add_argument(
+        "--advection",
+        action="store_true",
+        help="fit the advection-diffusion model, with D(z) and a penalised w(z, t)",
+    )
+    parser.add_argument("--w-velocity", type=float, default=weights.velocity_size, help="size of w")
+    parser.add_argument(
+        "--w-velocity-rough", type=float, default=weights.velocity_roughness, help="size of dw/dz"
+    )
     return parser.parse_args()
 
 
@@ -43,17 +52,23 @@ def main() -> None:
         batch_size=args.batch_size,
         seed=args.seed,
         loss_weights=LossWeights(
-            data=args.w_data, physics=args.w_physics, bc_z0=args.w_bc0, bc_z1=args.w_bc1
+            data=args.w_data,
+            physics=args.w_physics,
+            bc_z0=args.w_bc0,
+            bc_z1=args.w_bc1,
+            velocity_size=args.w_velocity,
+            velocity_roughness=args.w_velocity_rough,
         ),
         checkpoint_path=args.checkpoint,
     )
 
     observations = load_observations(data_cfg).to(device)
-    train_points, _ = train_test_split(observations, data_cfg.n_train, cfg.seed)
+    train_points, _ = train_test_split(observations, cfg.seed)
 
     torch.manual_seed(cfg.seed)
-    model = HeatDiffusionPINN().to(device)
-    logging.info("Training on %d points (%s)", len(train_points), device)
+    model_class = AdvectionDiffusionPINN if args.advection else HeatDiffusionPINN
+    model = model_class().to(device)
+    logging.info("Training %s on %d points (%s)", model.physics, len(train_points), device)
     train(model, train_points, cfg)
     logging.info("Saved model to %s", cfg.checkpoint_path)
 

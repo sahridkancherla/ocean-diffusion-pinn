@@ -9,7 +9,7 @@ on 29 November 2025.
 | File | Contents | Used by the model |
 |---|---|---|
 | `temp.cdf.zip` | Subsurface temperature `T_20` (°C) and pressure `P_1` (dbar), with quality (`QT_5020`, `QP_5001`) and source (`ST_6020`, `SP_6001`) flags | yes |
-| `sst.cdf` | Sea surface temperature `T_25` (°C) at 1 m, with quality and source flags | no |
+| `sst.cdf` | Sea surface temperature `T_25` (°C) at 1 m, with quality and source flags. Identical to the 1 m level of `T_20` wherever both are valid, so it adds no information | no |
 | `pos.cdf` | Daily GPS position of the buoy (`LAT_500`, `LON_502`) | no |
 
 `temp.cdf.zip` holds a single NetCDF file of about 140 MB, zipped to stay under
@@ -48,3 +48,7 @@ Implemented in [`src/ocean_pinn/data.py`](../src/ocean_pinn/data.py):
    the mooring line moves.
 5. The (time, level) grid is flattened level by level into 5,376,601 points and
    normalised as described in the [main README](../README.md#method).
+
+The record also keeps a mask of which samples were measured with an accepted quality
+code. Training still uses the filled record, while `scripts/check_pde.py` uses only the
+masked samples and keeps the 25 m and 150 m levels.

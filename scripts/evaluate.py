@@ -30,7 +30,7 @@ def main() -> None:
     data_cfg = DataConfig(data_dir=args.data_dir)
 
     observations = load_observations(data_cfg).to(device)
-    train_points, test_points = train_test_split(observations, data_cfg.n_train, args.seed)
+    train_points, test_points = train_test_split(observations, args.seed)
     points = train_points if args.split == "train" else test_points
     model = load_model(args.checkpoint, device)
     losses = evaluate(model, points, LossWeights(), args.batch_size)
