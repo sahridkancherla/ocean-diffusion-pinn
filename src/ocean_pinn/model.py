@@ -100,6 +100,8 @@ class SpectralConv2D(nn.Module):
 
     def forward(self, x):   # (b, c, z, t)
         z, t = x.shape[-2:]
+        if 2 * self.k_z > z or self.k_t > t // 2 + 1:
+            raise ValueError(f"Modes ({self.k_z}, {self.k_t}) do not fit a ({z}, {t}) grid.")
         xf = torch.fft.rfft2(x) # (b, c, z, t//2+1)
         out = torch.zeros(x.shape[0], self.out_channels, z, t//2+1, dtype=torch.cfloat,
                           device=x.device)
@@ -128,7 +130,7 @@ class FNO2D(nn.Module):
 
         self.project = nn.Sequential(
             nn.Conv2d(self.width, 128, 1),
-            nn.GELU,
+            nn.GELU(),
             nn.Conv2d(128, out_channels, 1)
         )
 
@@ -141,7 +143,7 @@ class FNO2D(nn.Module):
         x = self.project(x)
         return x
 
-_MODELS = {cls.physics: cls for cls in (HeatDiffusionPINN, AdvectionDiffusionPINN, FNO2D)}
+_MODELS = {cls.physics: cls for cls in (HeatDiffusionPINN, AdvectionDiffusionPINN)}
 
 
 def load_model(path: str | Path, device: torch.device | str = "cpu") -> HeatDiffusionPINN:
